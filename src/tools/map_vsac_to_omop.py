@@ -473,13 +473,13 @@ async def debug_vsac_omop_pipeline_tool(
         
         results = {
             "environment_variables": {
-                "VSAC_USERNAME": "SET" if settings.vsac_username else "NOT SET",
-                "VSAC_PASSWORD": "SET" if settings.vsac_password else "NOT SET",
-                "DATABASE_PASSWORD": "SET" if settings.database_password else "NOT SET",
-                "DATABASE_USER": database_user,
-                "DATABASE_ENDPOINT": database_endpoint,
-                "DATABASE_NAME": database_name,
-                "OMOP_DATABASE_SCHEMA": omop_database_schema
+                "vsac_username": "SET" if settings.vsac_username else "NOT SET",
+                "vsac_password": "SET" if settings.vsac_password else "NOT SET",
+                "database_password": "SET" if settings.database_password else "NOT SET",
+                "database_user": database_user,
+                "database_endpoint": database_endpoint,
+                "database_name": database_name,
+                "omop_database_schema": omop_database_schema
             },
             "credentials_used": {
                 "vsac_username": vsac_username or "NOT PROVIDED",

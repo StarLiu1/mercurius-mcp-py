@@ -52,3 +52,4 @@ Thumbs.db
 /old_scripts/
 notes.txt
 run-mcp.sh
+.env copy
