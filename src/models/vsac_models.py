@@ -20,6 +20,7 @@ class VSACMetadata(BaseModel):
     status: Optional[str] = None
     revision_date: Optional[str] = None
     description: Optional[str] = None
+    # Clinical metadata fields (from Purpose field parsing)
     clinical_focus: Optional[str] = None
     data_element_scope: Optional[str] = None
     inclusion_criteria: Optional[str] = None
