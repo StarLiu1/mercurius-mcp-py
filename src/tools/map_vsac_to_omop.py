@@ -1,3 +1,5 @@
+# Fixed src/tools/map_vsac_to_omop.py - Remove placeholder data and match JavaScript version
+
 import logging
 from typing import Dict, Any, List, Optional
 import asyncpg
@@ -13,14 +15,7 @@ logger = logging.getLogger(__name__)
 def prepare_concepts_and_summary(vsac_results: Dict, valuesets: List) -> tuple:
     """
     Build the flattened concept list for OMOP mapping and a per-ValueSet summary.
-    Matches the JavaScript prepareConceptsAndSummary function.
-    
-    Args:
-        vsac_results: Results from VSAC service
-        valuesets: ValueSet references with names
-        
-    Returns:
-        Tuple of (concepts_for_mapping, value_set_summary)
+    Matches the JavaScript prepareConceptsAndSummary function exactly.
     """
     concepts_for_mapping = []
     value_set_summary = {}
@@ -79,13 +74,7 @@ def prepare_concepts_and_summary(vsac_results: Dict, valuesets: List) -> tuple:
 def summarise_vsac_fetch(vsac_results: Dict) -> Dict:
     """
     Build a concise diagnostic object for the VSAC-fetch step.
-    Matches the JavaScript summariseVsacFetch function.
-    
-    Args:
-        vsac_results: Object returned by retrieveMultipleValueSets
-        
-    Returns:
-        Stats + detailedSummary (same keys used in JavaScript)
+    Matches the JavaScript summariseVsacFetch function exactly.
     """
     summary = {
         "totalRequested": len(vsac_results),
@@ -131,42 +120,25 @@ async def map_concepts_to_omop_database(
 ) -> Dict[str, Any]:
     """
     Map concepts to OMOP using actual database queries.
-    Matches the JavaScript mapConceptsToOmopDatabase function.
-    
-    Args:
-        concepts: Array of concept objects from VSAC
-        cdm_database_schema: OMOP CDM schema name
-        db_config: Database connection configuration
-        options: Mapping options
-        target_fact_tables: OMOP fact tables to consider for domain mapping
-        
-    Returns:
-        Mapping results with actual OMOP concept_ids
+    FIXED: Remove all placeholder/mock data and use real database like JavaScript version.
     """
     logger.info(f"Mapping {len(concepts)} concepts to OMOP using database...")
     logger.info(f"Database: {db_config['host']}/{db_config['database']}, Schema: {cdm_database_schema}")
     logger.info(f"Target fact tables: {', '.join(target_fact_tables)}")
     
-    # Enhanced database configuration (like JavaScript)
-    pool_config = {
-        "user": db_config["user"],
-        "host": db_config["host"],
-        "database": db_config["database"],
-        "password": db_config["password"],
-        "port": db_config.get("port", 5432),
-        "command_timeout": 30,
-        "max_size": 1,  # Limit to 1 connection for debugging
-    }
-    
-    logger.debug(f"Database config: {dict((k, v) for k, v in pool_config.items() if k != 'password')}")
-    
-    pool = None
+    # FIXED: Use simple connection instead of pool to avoid pool size issues
     connection = None
     
     try:
         logger.info("Attempting to connect to database...")
-        pool = await asyncpg.create_pool(**pool_config)
-        connection = await pool.acquire()
+        connection = await asyncpg.connect(
+            user=db_config["user"],
+            host=db_config["host"],
+            database=db_config["database"],
+            password=db_config["password"],
+            port=db_config.get("port", 5432),
+            command_timeout=30
+        )
         logger.info("Successfully connected to database")
         
         # Test the connection with a simple query (like JavaScript)
@@ -339,11 +311,8 @@ async def map_concepts_to_omop_database(
         raise Exception(f"OMOP database mapping failed: {str(error)}")
     finally:
         if connection:
-            await pool.release(connection)
-            logger.info("Database connection released")
-        if pool:
-            await pool.close()
-            logger.info("Database pool closed")
+            await connection.close()
+            logger.info("Database connection closed")
 
 
 async def execute_verbatim_query_real(connection, temp_table_name: str, cdm_schema: str) -> List[Dict]:
@@ -493,7 +462,7 @@ def generate_omop_mapping_summary(results: Dict, temp_concept_list: List) -> Dic
                     "mapped": 0,
                     "uniqueConceptIds": set()
                 }
-            mappings_by_value_set[concept_set_id][mapping.get("mapping_type")]+= 1
+            mappings_by_value_set[concept_set_id][mapping.get("mapping_type")] += 1
             mappings_by_value_set[concept_set_id]["uniqueConceptIds"].add(mapping.get("concept_id"))
     
     # Convert Sets to lists for JSON serialization
@@ -573,6 +542,49 @@ def generate_mapped_sql(cdm_database_schema: str, temp_table_name: str = "#temp_
     ORDER BY t.concept_set_id, cr.concept_id_2"""
 
 
+def generate_mapping_summary(extracted_oids, valuesets, value_set_summary, concepts_for_mapping, omop_mapping_results):
+    """Generate comprehensive mapping summary like JavaScript version."""
+    summary = {
+        "pipeline_success": True,
+        "total_valuesets_extracted": len(extracted_oids),
+        "total_concepts_from_vsac": len(concepts_for_mapping),
+        "total_omop_mappings": {
+            "verbatim": len(omop_mapping_results.get("verbatim", [])),
+            "standard": len(omop_mapping_results.get("standard", [])),
+            "mapped": len(omop_mapping_results.get("mapped", []))
+        },
+        "valueset_breakdown": [
+            {
+                "oid": oid,
+                "name": info.get("name", f"Unknown_{oid}"),
+                "concept_count": info.get("conceptCount", 0),
+                "code_systems": info.get("codeSystemsFound", []),
+                "status": info.get("status", "unknown")
+            }
+            for oid, info in value_set_summary.items()
+        ],
+        "vocabulary_distribution": {},
+        "mapping_coverage": {}
+    }
+    
+    # Calculate vocabulary distribution
+    vocab_counts = {}
+    for concept in concepts_for_mapping:
+        vocab_id = concept.get("vocabulary_id", "unknown")
+        vocab_counts[vocab_id] = vocab_counts.get(vocab_id, 0) + 1
+    summary["vocabulary_distribution"] = vocab_counts
+    
+    # Calculate mapping coverage
+    total_concepts = len(concepts_for_mapping)
+    summary["mapping_coverage"] = {
+        "verbatim_percentage": f"{(len(omop_mapping_results.get('verbatim', [])) / total_concepts * 100):.1f}" if total_concepts > 0 else "0.0",
+        "standard_percentage": f"{(len(omop_mapping_results.get('standard', [])) / total_concepts * 100):.1f}" if total_concepts > 0 else "0.0",
+        "mapped_percentage": f"{(len(omop_mapping_results.get('mapped', [])) / total_concepts * 100):.1f}" if total_concepts > 0 else "0.0"
+    }
+    
+    return summary
+
+
 async def map_vsac_to_omop_tool(
     cql_query: str,
     vsac_username: Optional[str] = None,
@@ -587,26 +599,7 @@ async def map_vsac_to_omop_tool(
     include_mapped: bool = True,
     target_fact_tables: Optional[List[str]] = None
 ) -> Dict[str, Any]:
-    """
-    Complete VSAC to OMOP mapping pipeline tool - matches JavaScript functionality.
-    
-    Args:
-        cql_query: CQL query containing ValueSet references
-        vsac_username: VSAC username
-        vsac_password: VSAC password
-        database_user: Database username
-        database_endpoint: Database endpoint
-        database_name: Database name
-        database_password: Database password
-        omop_database_schema: OMOP CDM schema name
-        include_verbatim: Include verbatim mappings
-        include_standard: Include standard concept mappings
-        include_mapped: Include mapped concept mappings
-        target_fact_tables: Target OMOP fact tables
-        
-    Returns:
-        Complete mapping results
-    """
+    """Complete VSAC to OMOP mapping pipeline tool - matches JavaScript functionality exactly."""
     try:
         # Use environment variables as defaults (like JavaScript)
         vsac_username = vsac_username or settings.vsac_username
@@ -779,24 +772,7 @@ async def debug_vsac_omop_pipeline_tool(
     database_password: Optional[str] = None,
     omop_database_schema: Optional[str] = None
 ) -> Dict[str, Any]:
-    """
-    Diagnostic tool to test each step individually - matches JavaScript functionality.
-    
-    Args:
-        step: Which step to test ("extract", "fetch", "map", "all")
-        cql_query: CQL query to process
-        vsac_username: VSAC username
-        vsac_password: VSAC password
-        test_oids: Optional OIDs for testing
-        database_user: Database username
-        database_endpoint: Database endpoint
-        database_name: Database name
-        database_password: Database password
-        omop_database_schema: OMOP schema name
-        
-    Returns:
-        Debug results for the specified step(s)
-    """
+    """Diagnostic tool to test each step individually - matches JavaScript functionality exactly."""
     try:
         # Use environment variables as defaults (like JavaScript)
         vsac_username = vsac_username or settings.vsac_username
@@ -826,14 +802,15 @@ async def debug_vsac_omop_pipeline_tool(
         
         if step in ["extract", "all"]:
             logger.info("Testing extraction step...")
-            extractedOids,  valuesets= extract_valueset_identifiers_from_cql(cql_query)
+            extracted_oids, valuesets = extract_valueset_identifiers_from_cql(cql_query)
             from utils.extractors import validate_extracted_oids
             
             results["extraction"] = {
-                "extractedOids": extractedOids,
+                "extractedOids": extracted_oids,
                 "valuesets": [{"name": vs.name, "oid": vs.oid} for vs in valuesets],
-                "validation": validate_extracted_oids(extractedOids),
-                "arrayAsStr": str(format_list_with_double_quotes(extractedOids))
+                "validation": validate_extracted_oids(extracted_oids),
+                # FIXED: This will now show double quotes properly
+                "arrayAsStr": format_list_with_double_quotes(extracted_oids)
             }
         
         if step in ["fetch", "all"]:
@@ -867,12 +844,13 @@ async def debug_vsac_omop_pipeline_tool(
         if step in ["map", "all"]:
             logger.info("Testing OMOP mapping step...")
             
-            # Use real concept data from VSAC fetch if available, otherwise create mock data
+            # Use real concept data from VSAC fetch if available, or fetch using test_oids
             concepts_to_map = []
             
+            # Check if we have VSAC results from the fetch step
             if "vsacFetch" in results and results["vsacFetch"].get("results"):
-                # Convert VSAC results to concept mapping format
-                logger.info("Using real VSAC concept data for mapping test...")
+                # Convert VSAC results to concept mapping format (like JavaScript)
+                logger.info("Using real VSAC concept data from fetch step for mapping test...")
                 
                 for oid, vsac_set in results["vsacFetch"]["results"].items():
                     if hasattr(vsac_set, 'concepts') and vsac_set.concepts:
@@ -894,27 +872,57 @@ async def debug_vsac_omop_pipeline_tool(
                             })
                 
                 logger.info(f"Prepared {len(concepts_to_map)} real VSAC concepts for OMOP mapping")
-            else:
-                # Create mock concept data for testing (like JavaScript)
-                logger.info("Using mock concept data for mapping test...")
-                concepts_to_map = [
-                    {
-                        "concept_set_id": "2.16.840.1.113883.3.464.1003.103.12.1001",
-                        "concept_set_name": "Diabetes",
-                        "concept_code": "E11.9",
-                        "vocabulary_id": "ICD10CM",
-                        "original_vocabulary": "ICD10CM",
-                        "display_name": "Type 2 diabetes mellitus without complications"
-                    },
-                    {
-                        "concept_set_id": "2.16.840.1.113883.3.464.1003.103.12.1001",
-                        "concept_set_name": "Diabetes",
-                        "concept_code": "250.00",
-                        "vocabulary_id": "ICD9CM",
-                        "original_vocabulary": "ICD9CM",
-                        "display_name": "Diabetes mellitus without mention of complication"
+            
+            # If no VSAC data from fetch step but test_oids provided, fetch directly
+            elif test_oids and len(test_oids) > 0 and vsac_username and vsac_password:
+                logger.info(f"Fetching VSAC data directly for mapping test using provided test_oids: {test_oids}")
+                
+                try:
+                    # Fetch VSAC data directly using the provided test_oids
+                    direct_vsac_results = await vsac_service.retrieve_multiple_value_sets(
+                        test_oids,
+                        vsac_username,
+                        vsac_password
+                    )
+                    
+                    # Convert to concept mapping format
+                    for oid, vsac_set in direct_vsac_results.items():
+                        if hasattr(vsac_set, 'concepts') and vsac_set.concepts:
+                            valueset_name = f"TestValueSet_{oid}"
+                            
+                            for concept in vsac_set.concepts:
+                                concepts_to_map.append({
+                                    "concept_set_id": oid,
+                                    "concept_set_name": valueset_name,
+                                    "concept_code": concept.code,
+                                    "vocabulary_id": map_vsac_to_omop_vocabulary(concept.code_system_name),
+                                    "original_vocabulary": concept.code_system_name,
+                                    "display_name": concept.display_name,
+                                    "code_system": concept.code_system
+                                })
+                    
+                    logger.info(f"Successfully fetched and prepared {len(concepts_to_map)} concepts from test_oids for OMOP mapping")
+                    
+                    # Store the direct fetch results for reference
+                    results["directVsacFetch"] = {
+                        "source": "test_oids parameter",
+                        "test_oids": test_oids,
+                        "conceptsRetrieved": len(concepts_to_map),
+                        "message": f"Fetched concepts directly from {len(test_oids)} ValueSet OIDs for mapping test"
                     }
-                ]
+                    
+                except Exception as direct_fetch_error:
+                    logger.error(f"Failed to fetch VSAC data using test_oids: {direct_fetch_error}")
+                    concepts_to_map = []
+                    results["directVsacFetch"] = {
+                        "error": f"Failed to fetch test_oids: {str(direct_fetch_error)}",
+                        "test_oids": test_oids
+                    }
+            
+            else:
+                # No VSAC data available
+                logger.info("No VSAC concept data available for mapping test")
+                concepts_to_map = []
             
             # Check if database connection parameters are provided
             if not database_password:
@@ -928,10 +936,45 @@ async def debug_vsac_omop_pipeline_tool(
                         "database": database_name,
                         "schema": omop_database_schema
                     },
-                    "mockMappingWouldProcess": f"{len(concepts_to_map)} concepts"
+                    "conceptsAvailableForMapping": f"{len(concepts_to_map)} real concepts from VSAC" if concepts_to_map else "No concepts available",
+                    "dataSource": results.get("directVsacFetch", {}).get("source", "fetch step results") if concepts_to_map else "none"
+                }
+            elif len(concepts_to_map) == 0:
+                # Provide helpful suggestions based on what parameters were provided
+                suggestions = []
+                if not test_oids and "extraction" not in results:
+                    suggestions.append("Run extract step first to get ValueSet OIDs from CQL")
+                elif not test_oids and "vsacFetch" not in results:
+                    suggestions.append("Run fetch step first, or provide test_oids parameter with specific ValueSet OIDs")
+                elif test_oids and (not vsac_username or not vsac_password):
+                    suggestions.append(f"VSAC credentials required to fetch concepts for test_oids: {test_oids}")
+                else:
+                    suggestions.append("Provide test_oids parameter like: ['2.16.840.1.114222.4.11.837', '2.16.840.1.113883.3.526.3.1240']")
+                
+                results["omopMapping"] = {
+                    "error": "No concepts available for mapping",
+                    "suggestions": suggestions,
+                    "inputConcepts": 0,
+                    "database": {
+                        "user": database_user,
+                        "endpoint": database_endpoint,
+                        "database": database_name,
+                        "schema": omop_database_schema
+                    },
+                    "availableOptions": {
+                        "test_oids_provided": test_oids if test_oids else None,
+                        "extraction_results_available": "extraction" in results,
+                        "fetch_results_available": "vsacFetch" in results,
+                        "vsac_credentials_available": bool(vsac_username and vsac_password)
+                    },
+                    "exampleUsage": {
+                        "description": "To test OMOP mapping with specific ValueSets, provide test_oids parameter",
+                        "example_test_oids": ["2.16.840.1.114222.4.11.837", "2.16.840.1.113883.3.526.3.1240"],
+                        "note": "These OIDs will be fetched from VSAC and mapped to OMOP concepts"
+                    }
                 }
             else:
-                # Execute the actual OMOP mapping logic with real database
+                # Execute the actual OMOP mapping logic with real database and real concepts
                 try:
                     db_config = {
                         "user": database_user,
@@ -966,7 +1009,8 @@ async def debug_vsac_omop_pipeline_tool(
                             "endpoint": database_endpoint,
                             "database": database_name,
                             "schema": omop_database_schema
-                        }
+                        },
+                        "dataSource": "Real VSAC concepts mapped to real OMOP database"
                     }
                     
                     logger.info(f"OMOP mapping test completed: {omop_results.get('mappingSummary', {}).get('totalMappings', 0)} total mappings found")

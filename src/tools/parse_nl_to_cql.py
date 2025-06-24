@@ -127,6 +127,9 @@ async def valueset_regex_extraction_tool(
         valid_oids = validate_extracted_oids(oids)
         invalid_oids = [oid for oid in oids if oid not in valid_oids]
         
+        # Import the fixed helper function
+        from utils.helpers import format_list_with_double_quotes
+        
         result = {
             "extracted_value_sets": [{"name": vs.name, "oid": vs.oid} for vs in valuesets],
             "valid_oids": valid_oids,
@@ -139,7 +142,9 @@ async def valueset_regex_extraction_tool(
             "copy_pastable_arrays": {
                 "extracted_oids": oids,
                 "valid_oids": valid_oids,
-                "invalid_oids": invalid_oids
+                "invalid_oids": invalid_oids,
+                # Use the fixed helper - this will now properly show double quotes
+                "extracted_oids_formatted": format_list_with_double_quotes(oids)
             }
         }
         

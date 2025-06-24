@@ -15,7 +15,6 @@ def format_list_with_double_quotes(items: List[str]) -> str:
         Input: ['item1', 'item2', 'item3']
         Output: '["item1", "item2", "item3"]'
     """
-    print(items)
     return json.dumps(items)
 
 def format_oids_for_display(oids: List[str]) -> str:
