@@ -1,3 +1,4 @@
 to start the inspector env: mcp-inspector python start_server.py
 
 Next todo: streamable http, executable sql, output to csv
+ICL + MCP?
