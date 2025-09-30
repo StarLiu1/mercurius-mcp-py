@@ -36,6 +36,9 @@ class Settings(BaseSettings):
     # Server Configuration
     mcp_request_timeout: int = 30000
     mcp_tool_timeout: int = 60000
+
+    loinc_username: Optional[str] = None
+    loinc_password: Optional[str] = None
     
     class Config:
         # Find .env file relative to project root, not current working directory

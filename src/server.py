@@ -12,6 +12,9 @@ from tools.map_vsac_to_omop import (
     map_vsac_to_omop_tool,
     debug_vsac_omop_pipeline_tool
 )
+from tools.lookup_loinc_code import lookup_loinc_code_tool
+from tools.lookup_snomed_code import lookup_snomed_code_tool
+
 from resources.config import config_resource
 from resources.schema import omop_schema_resource
 from utils.env_helpers import (
@@ -131,6 +134,38 @@ def create_omop_server() -> FastMCP:
             database_name,
             database_password,
             omop_database_schema
+        )
+    
+    @mcp.tool()
+    async def lookup_loinc_code(
+        code: str,
+        display: Optional[str] = None,
+        database_user: Optional[str] = None,
+        database_endpoint: Optional[str] = None,
+        database_name: Optional[str] = None,
+        database_password: Optional[str] = None,
+        omop_database_schema: Optional[str] = None
+    ) -> dict:
+        """Look up LOINC code and map to OMOP concepts."""
+        return await lookup_loinc_code_tool(
+            code, display, database_user, database_endpoint,
+            database_name, database_password, omop_database_schema
+        )
+    
+    @mcp.tool()
+    async def lookup_snomed_code(
+        code: str,
+        display: Optional[str] = None,
+        database_user: Optional[str] = None,
+        database_endpoint: Optional[str] = None,
+        database_name: Optional[str] = None,
+        database_password: Optional[str] = None,
+        omop_database_schema: Optional[str] = None
+    ) -> dict:
+        """Look up SNOMED code and map to OMOP concepts."""
+        return await lookup_snomed_code_tool(
+            code, display, database_user, database_endpoint,
+            database_name, database_password, omop_database_schema
         )
     
     @mcp.tool()
