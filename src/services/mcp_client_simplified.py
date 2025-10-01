@@ -273,6 +273,9 @@ class SimplifiedMCPClient:
         for vs_info in step1.get('valuesets', []):
             oid = vs_info['oid']
             name = vs_info['name']
+
+            # CRITICAL: Strip urn:oid: prefix before cleaning
+            clean_oid = oid.replace("urn:oid:", "").replace(".", "_").replace("-", "_")
             
             # Get all concept IDs for this valueset
             concept_ids = []
@@ -289,7 +292,7 @@ class SimplifiedMCPClient:
             }
 
             # Primary: OID-based placeholder (always works)
-            placeholder_oid = f"PLACEHOLDER_{oid.replace('.', '_')}"
+            placeholder_oid = f"PLACEHOLDER_{clean_oid}"
             processed["placeholders"][placeholder_oid] = concept_ids
 
             # Keep name-based for backward compatibility but log warning

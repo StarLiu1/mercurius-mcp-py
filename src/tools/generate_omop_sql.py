@@ -94,7 +94,12 @@ async def generate_omop_sql_tool(
         valueset_hints = {}
         if valueset_registry:
             for oid, vs_data in valueset_registry.items():
-                valueset_hints[oid] = vs_data.get('name', '')
+                clean_oid = oid.replace(".", "_").replace("-", "_")
+                placeholder = f"PLACEHOLDER_{clean_oid}"
+                valueset_hints[oid] = {
+                    'name': vs_data.get('name', ''),
+                    'placeholder': placeholder  # Add explicit placeholder
+                }
         
         logger.info(f"Context provided:")
         logger.info(f"  - Valuesets: {len(all_valuesets)}")

@@ -67,7 +67,9 @@ async def extract_valuesets_with_omop_tool(
             include_standard=False,
             include_mapped=True
         )
-        
+        logger.info(f"DEBUG: map_vsac_to_omop_tool success: {main_result.get('success')}")
+        logger.info(f"DEBUG: map_vsac_to_omop_tool error: {main_result.get('error')}")
+
         if not main_result.get('success'):
             return {
                 "success": False,
@@ -234,9 +236,13 @@ async def extract_valuesets_with_omop_tool(
                 oid = vs.get('oid', '')
                 name = vs.get('name', '')
                 if oid:
-                    valueset_registry[oid] = {
+                    logger.info(f"DEBUG: Original OID from parser: {oid}")
+                    clean_oid = oid.replace('urn:oid:', '')
+                    logger.info(f"DEBUG: Clean OID from parser: {clean_oid}")
+
+                    valueset_registry[clean_oid] = {
                         'name': name,
-                        'oid': oid,
+                        'oid': clean_oid,
                         'source': 'main'
                     }
             
@@ -247,9 +253,10 @@ async def extract_valuesets_with_omop_tool(
                         oid = vs.get('oid', '')
                         name = vs.get('name', '')
                         if oid:
-                            valueset_registry[oid] = {
+                            clean_oid = oid.replace('urn:oid:', '')
+                            valueset_registry[clean_oid] = {
                                 'name': name,
-                                'oid': oid,
+                                'oid': clean_oid,
                                 'source': lib_name
                             }
         

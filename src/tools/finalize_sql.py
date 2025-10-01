@@ -78,7 +78,17 @@ async def finalize_sql_tool(
             return {
                 "success": False,
                 "error": "No SQL query provided",
-                "step": "finalize_sql"
+                "step": "finalize_sql",
+                "statistics": { 
+                    "placeholders_found": 0,
+                    "placeholders_replaced": 0,
+                    "replacements_made": 0, 
+                    "unmapped_placeholders": 0,
+                    "remaining_placeholders": 0,
+                    "total_concept_ids_used": 0,
+                    "sql_length_before": 0,
+                    "sql_length_after": 0
+                }
             }
         
         if not placeholder_mappings:
@@ -86,7 +96,17 @@ async def finalize_sql_tool(
             return {
                 "success": False,
                 "error": "No placeholder mappings provided",
-                "step": "finalize_sql"
+                "step": "finalize_sql",
+                "statistics": {  
+                    "placeholders_found": 0,
+                    "placeholders_replaced": 0,
+                    "replacements_made": 0, 
+                    "unmapped_placeholders": 0,
+                    "remaining_placeholders": 0,
+                    "total_concept_ids_used": 0,
+                    "sql_length_before": 0,
+                    "sql_length_after": 0
+                }
             }
         
         logger.info(f"SQL length: {len(sql_query):,} characters")
@@ -180,6 +200,7 @@ async def finalize_sql_tool(
             "placeholders_replaced": replacements_made,
             "unmapped_placeholders": len(unmapped_placeholders),
             "remaining_placeholders": len(remaining),
+            "replacements_made": replacements_made,
             "total_concept_ids_used": sum(
                 len(flatten_concept_ids(concepts)) 
                 for placeholder, concepts in placeholder_mappings.items() 

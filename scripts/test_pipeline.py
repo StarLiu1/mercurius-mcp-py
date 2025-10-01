@@ -61,7 +61,7 @@ async def test_pipeline():
         print("✅ Pipeline succeeded!")
         print(f"\nFinal SQL ({len(result['final_sql'])} characters):")
         print("-" * 80)
-        print(result['final_sql'][:500])  # Print first 500 chars
+        print(result['final_sql'])  # Print first 500 chars
         print("...")
         print("-" * 80)
         
