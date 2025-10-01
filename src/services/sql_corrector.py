@@ -5,8 +5,8 @@ SQL corrector that fixes SQL based on validation feedback.
 import json
 import logging
 from typing import Dict, Any, List
-from src.services.llm_factory import LLMFactory
-from src.services. import unwrap_json_response
+from services.llm_factory import LLMFactory
+from services.json_utils import unwrap_json_response
 
 logger = logging.getLogger(__name__)
 

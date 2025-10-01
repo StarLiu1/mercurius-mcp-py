@@ -52,3 +52,6 @@ Thumbs.db
 /old_scripts/
 run-mcp.sh
 .env copy
+config.yaml
+/examples
+/outputs/raw

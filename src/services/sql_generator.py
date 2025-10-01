@@ -5,8 +5,8 @@ Minimal SQL generation agent for CQL to SQL translation
 import json
 import logging
 from typing import Dict, Any, Optional
-from src.services.llm_factory import LLMFactory
-from src.services.json_utils import unwrap_json_response
+from services.llm_factory import LLMFactory
+from services.json_utils import unwrap_json_response
 
 logger = logging.getLogger(__name__)
 

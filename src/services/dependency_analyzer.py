@@ -6,7 +6,7 @@ import json
 import logging
 import re
 from typing import Dict, Any, List, Optional
-from src.services.llm_factory import LLMFactory
+from services.llm_factory import LLMFactory
 
 logger = logging.getLogger(__name__)
 

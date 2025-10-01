@@ -10,12 +10,12 @@ from pathlib import Path
 from langgraph.graph import StateGraph, END
 
 # Import new LLM-based components
-from src.services.cql_parser import CQLParser
-from src.services.sql_generator import SimpleSQLGenerator  
-from src.services.sql_validator import SQLValidator
-from src.services.sql_corrector import SQLCorrector
-from src.services.mcp_client_simplified import SimplifiedMCPClient
-from src.services.library_resolver import LibraryResolver
+from services.cql_parser import CQLParser
+from services.sql_generator import SimpleSQLGenerator  
+from services.sql_validator import SQLValidator
+from services.sql_corrector import SQLCorrector
+from services.mcp_client_simplified import SimplifiedMCPClient
+from services.library_resolver import LibraryResolver
 
 logger = logging.getLogger(__name__)
 
