@@ -15,6 +15,7 @@ async def extract_valuesets_with_omop_tool(
     cql_content: str,
     library_files: Optional[Dict[str, str]] = None,
     parsed_structure: Optional[Dict[str, Any]] = None,
+    library_definitions: Optional[Dict[str, Any]] = None,
     vsac_username: Optional[str] = None,
     vsac_password: Optional[str] = None,
     database_user: Optional[str] = None,
@@ -246,8 +247,8 @@ async def extract_valuesets_with_omop_tool(
                         'source': 'main'
                     }
             
-            library_definitions = parsed_structure.get('library_definitions', {})
-            for lib_name, lib_def in library_definitions.items():
+            library_defs = library_definitions # parsed_structure.get('library_definitions', {})
+            for lib_name, lib_def in library_defs.items():
                 if isinstance(lib_def, dict) and 'valuesets' in lib_def:
                     for vs in lib_def.get('valuesets', []):
                         oid = vs.get('oid', '')

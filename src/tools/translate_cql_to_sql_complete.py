@@ -106,6 +106,7 @@ async def translate_cql_to_sql_complete_tool(
             cql_content=cql_content,
             library_files=tool1_result.get('library_files'),
             parsed_structure=tool1_result.get('parsed_structure'),
+            library_definitions=tool1_result.get('library_definitions'),
             vsac_username=vsac_username,
             vsac_password=vsac_password,
             database_user=database_user,
