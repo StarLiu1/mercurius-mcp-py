@@ -107,8 +107,8 @@ OMOP_DATABASE_SCHEMA=dbo
 # =================================
 # Server Configuration (Optional)
 # =================================
-MCP_REQUEST_TIMEOUT=30000
-MCP_TOOL_TIMEOUT=60000
+MCP_REQUEST_TIMEOUT=1200000
+MCP_TOOL_TIMEOUT=1200000
 """
     
     return template

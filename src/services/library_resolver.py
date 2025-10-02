@@ -16,14 +16,14 @@ class LibraryResolver:
     Resolves CQL library includes and coordinates multiple MCP calls.
     """
     
-    def __init__(self, mcp_client):
+    def __init__(self):
         """
         Initialize library resolver.
         
         Args:
             mcp_client: SimplifiedMCPClient instance for valueset extraction
         """
-        self.mcp_client = mcp_client
+        # self.mcp_client = mcp_client
         
     def parse_includes(self, cql_content: str) -> List[Dict[str, str]]:
         """
@@ -130,77 +130,77 @@ class LibraryResolver:
         
         return library_files
     
-    def extract_library_valuesets(self, library_files: Dict[str, str]) -> Tuple[Dict[str, Any], Dict[str, List[str]]]:
-        """
-        Extract valuesets from all library files using multiple MCP calls.
+    # def extract_library_valuesets(self, library_files: Dict[str, str]) -> Tuple[Dict[str, Any], Dict[str, List[str]]]:
+    #     """
+    #     Extract valuesets from all library files using multiple MCP calls.
         
-        Args:
-            library_files: Dict of library_alias -> library_content
+    #     Args:
+    #         library_files: Dict of library_alias -> library_content
             
-        Returns:
-            Tuple of (all_valuesets, all_placeholder_mappings)
-        """
-        all_valuesets = {}
-        all_placeholder_mappings = {}
+    #     Returns:
+    #         Tuple of (all_valuesets, all_placeholder_mappings)
+    #     """
+    #     all_valuesets = {}
+    #     all_placeholder_mappings = {}
         
-        for library_alias, library_content in library_files.items():
-            logger.info(f"Extracting valuesets from library: {library_alias}")
+    #     for library_alias, library_content in library_files.items():
+    #         logger.info(f"Extracting valuesets from library: {library_alias}")
             
-            try:
-                # Call MCP for this library
-                result = self.mcp_client.extract_and_map_valuesets(library_content)
+    #         try:
+    #             # Call MCP for this library
+    #             result = self.mcp_client.extract_and_map_valuesets(library_content)
                 
-                # Get valuesets and placeholders
-                library_valuesets = result.get("valuesets", {})
-                library_placeholders = result.get("placeholders", {})
+    #             # Get valuesets and placeholders
+    #             library_valuesets = result.get("valuesets", {})
+    #             library_placeholders = result.get("placeholders", {})
                 
-                # Prefix placeholders with library alias for uniqueness
-                for placeholder, concepts in library_placeholders.items():
-                    # Create a library-specific placeholder name
-                    prefixed_placeholder = f"PLACEHOLDER_{library_alias.upper()}_{placeholder.replace('PLACEHOLDER_', '')}"
-                    all_placeholder_mappings[prefixed_placeholder] = concepts
+    #             # Prefix placeholders with library alias for uniqueness
+    #             for placeholder, concepts in library_placeholders.items():
+    #                 # Create a library-specific placeholder name
+    #                 prefixed_placeholder = f"PLACEHOLDER_{library_alias.upper()}_{placeholder.replace('PLACEHOLDER_', '')}"
+    #                 all_placeholder_mappings[prefixed_placeholder] = concepts
                 
-                # Merge valuesets (keeping library context)
-                for oid, valueset_info in library_valuesets.items():
-                    valueset_info["source_library"] = library_alias
-                    all_valuesets[oid] = valueset_info
+    #             # Merge valuesets (keeping library context)
+    #             for oid, valueset_info in library_valuesets.items():
+    #                 valueset_info["source_library"] = library_alias
+    #                 all_valuesets[oid] = valueset_info
                 
-                logger.info(f"Library {library_alias}: {len(library_valuesets)} valuesets, {len(library_placeholders)} placeholders")
+    #             logger.info(f"Library {library_alias}: {len(library_valuesets)} valuesets, {len(library_placeholders)} placeholders")
                 
-            except Exception as e:
-                logger.error(f"Failed to extract valuesets from library {library_alias}: {e}")
+    #         except Exception as e:
+    #             logger.error(f"Failed to extract valuesets from library {library_alias}: {e}")
         
-        return all_valuesets, all_placeholder_mappings
+    #     return all_valuesets, all_placeholder_mappings
     
-    def merge_valueset_results(self, main_valuesets: Dict, main_placeholders: Dict,
-                              library_valuesets: Dict, library_placeholders: Dict) -> Tuple[Dict, Dict]:
-        """
-        Merge valueset results from main CQL and libraries.
+    # def merge_valueset_results(self, main_valuesets: Dict, main_placeholders: Dict,
+    #                           library_valuesets: Dict, library_placeholders: Dict) -> Tuple[Dict, Dict]:
+    #     """
+    #     Merge valueset results from main CQL and libraries.
         
-        Args:
-            main_valuesets: Valuesets from main CQL
-            main_placeholders: Placeholders from main CQL
-            library_valuesets: Valuesets from libraries
-            library_placeholders: Placeholders from libraries
+    #     Args:
+    #         main_valuesets: Valuesets from main CQL
+    #         main_placeholders: Placeholders from main CQL
+    #         library_valuesets: Valuesets from libraries
+    #         library_placeholders: Placeholders from libraries
             
-        Returns:
-            Tuple of (merged_valuesets, merged_placeholders)
-        """
-        # Start with main valuesets
-        merged_valuesets = main_valuesets.copy()
-        merged_placeholders = main_placeholders.copy()
+    #     Returns:
+    #         Tuple of (merged_valuesets, merged_placeholders)
+    #     """
+    #     # Start with main valuesets
+    #     merged_valuesets = main_valuesets.copy()
+    #     merged_placeholders = main_placeholders.copy()
         
-        # Add library valuesets (mark source)
-        for oid, valueset_info in library_valuesets.items():
-            if oid not in merged_valuesets:
-                merged_valuesets[oid] = valueset_info
-            else:
-                # If duplicate, log it
-                logger.info(f"Valueset {oid} found in multiple sources")
+    #     # Add library valuesets (mark source)
+    #     for oid, valueset_info in library_valuesets.items():
+    #         if oid not in merged_valuesets:
+    #             merged_valuesets[oid] = valueset_info
+    #         else:
+    #             # If duplicate, log it
+    #             logger.info(f"Valueset {oid} found in multiple sources")
         
-        # Add library placeholders
-        merged_placeholders.update(library_placeholders)
+    #     # Add library placeholders
+    #     merged_placeholders.update(library_placeholders)
         
-        logger.info(f"Merged results: {len(merged_valuesets)} valuesets, {len(merged_placeholders)} placeholders")
+    #     logger.info(f"Merged results: {len(merged_valuesets)} valuesets, {len(merged_placeholders)} placeholders")
         
-        return merged_valuesets, merged_placeholders
+    #     return merged_valuesets, merged_placeholders

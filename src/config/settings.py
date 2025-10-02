@@ -34,8 +34,8 @@ class Settings(BaseSettings):
     omop_database_schema: str = "dbo"
     
     # Server Configuration
-    mcp_request_timeout: int = 30000
-    mcp_tool_timeout: int = 60000
+    mcp_request_timeout: int = 1200000
+    mcp_tool_timeout: int = 1200000
 
     loinc_username: Optional[str] = None
     loinc_password: Optional[str] = None

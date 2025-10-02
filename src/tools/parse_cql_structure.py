@@ -9,7 +9,7 @@ import yaml
 
 from services.cql_parser import CQLParser
 from services.library_resolver import LibraryResolver
-from services.mcp_client_simplified import SimplifiedMCPClient
+# from services.mcp_client_simplified import SimplifiedMCPClient
 
 logger = logging.getLogger(__name__)
 
@@ -75,21 +75,27 @@ async def parse_cql_structure_tool(
         # Initialize CQL parser
         parser = CQLParser(config)
         
-        # Read library files if path provided
+
         library_files = {}
         if cql_file_path and cql_file_path != "inline":
-            cql_path = Path(cql_file_path)
-            if cql_path.exists():
-                cql_dir = cql_path.parent
-                logger.info(f"Looking for library files in: {cql_dir}")
-                
-                for lib_file in cql_dir.glob("*.cql"):
-                    if lib_file != cql_path:
-                        try:
-                            library_files[lib_file.stem] = lib_file.read_text()
-                            logger.info(f"  ✓ Found library: {lib_file.name}")
-                        except Exception as e:
-                            logger.warning(f"  ✗ Could not read {lib_file}: {e}")
+            # Import here to avoid circular imports
+            from services.library_resolver import LibraryResolver
+
+            resolver = LibraryResolver()
+
+            # ✅ ADD: Log the CQL file path
+            logger.info(f"CQL file path provided: {cql_file_path}")
+            logger.info(f"CQL file exists: {Path(cql_file_path).exists()}")
+            logger.info(f"CQL parent directory: {Path(cql_file_path).parent}")
+            
+            # Parse include statements from CQL
+            includes = resolver.parse_includes(cql_content)
+            logger.info(f"Found {len(includes)} include statements in CQL")
+            
+            # Read the actual library files
+            library_files = resolver.read_library_files(cql_file_path, includes)
+            logger.info(f"Successfully read {len(library_files)} library files")
+        
         
         # Parse CQL with LLM
         logger.info(f"Parsing CQL with {len(library_files)} library files...")
@@ -115,6 +121,13 @@ async def parse_cql_structure_tool(
         # Identify valueset sources
         for valueset in parsed_structure.valuesets:
             dependency_analysis["valueset_sources"][valueset.name] = "main"
+
+        # ✅ NEW: Add library valuesets to dependency analysis
+        for lib_name, lib_def in parsed_structure.library_definitions.items():
+            if isinstance(lib_def, dict) and 'valuesets' in lib_def:
+                for vs in lib_def.get('valuesets', []):
+                    vs_name = vs.get('name') if isinstance(vs, dict) else vs.name
+                    dependency_analysis["valueset_sources"][vs_name] = lib_name
         
         # Add SQL hints based on populations
         if parsed_structure.populations:
@@ -132,14 +145,19 @@ async def parse_cql_structure_tool(
             "populations_count": len(parsed_structure.populations),
             "parameters_count": len(parsed_structure.parameters),
             "library_files_found": len(library_files),
-            "library_definitions_parsed": len(parsed_structure.library_definitions)
+            "library_definitions_parsed": len(parsed_structure.library_definitions),
+            "library_valuesets_count": sum(
+                len(lib_def.get('valuesets', [])) if isinstance(lib_def, dict) else len(lib_def.valuesets)
+                for lib_def in parsed_structure.library_definitions.values()
+            )
         }
         
         logger.info("=" * 80)
         logger.info("✓ Tool 1 Complete: CQL Structure Parsed")
         logger.info(f"  - Library: {parsed_structure.library_name} v{parsed_structure.library_version}")
         logger.info(f"  - Definitions: {len(parsed_structure.definitions)}")
-        logger.info(f"  - Valuesets: {len(parsed_structure.valuesets)}")
+        logger.info(f"  - Main Valuesets: {len(parsed_structure.valuesets)}")
+        logger.info(f"  - Library Valuesets: {statistics['library_valuesets_count']}")
         logger.info(f"  - Includes: {len(parsed_structure.includes)}")
         logger.info(f"  - Library files: {len(library_files)}")
         logger.info("=" * 80)

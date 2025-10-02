@@ -72,8 +72,8 @@ class SimplifiedMCPClient:
             "databaseSchema": self.db_config.get('schema', 'public'),
             "databaseUser": self.db_config.get('user', ''),
             "databasePassword": self.db_config.get('password', ''),
-            "includeVerbatim": False,
-            "includeStandard": False,
+            "includeVerbatim": True,
+            "includeStandard": True,
             "includeMapped": True
         }
         

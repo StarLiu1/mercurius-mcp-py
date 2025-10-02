@@ -106,12 +106,12 @@ async def extract_valuesets_with_omop_tool(
                 "source": "main"
             }
             
-            # Create placeholders (both OID and name-based)
+            # Create placeholders (just oid)
             placeholder_oid = f"PLACEHOLDER_{oid.replace('.', '_')}"
             placeholder_mappings[placeholder_oid] = concept_ids
             
-            placeholder_name = f"PLACEHOLDER_{name.upper().replace(' ', '_').replace('-', '_')}"
-            placeholder_mappings[placeholder_name] = concept_ids
+            # placeholder_name = f"PLACEHOLDER_{name.upper().replace(' ', '_').replace('-', '_')}"
+            # placeholder_mappings[placeholder_name] = concept_ids
         
         # Process individual codes from main CQL
         for code_info in main_extraction.get('codes', []):
@@ -195,8 +195,8 @@ async def extract_valuesets_with_omop_tool(
                     placeholder_oid = f"PLACEHOLDER_{oid.replace('.', '_')}"
                     placeholder_mappings[placeholder_oid] = concept_ids
                     
-                    placeholder_name = f"PLACEHOLDER_{lib_name.upper()}_{name.upper().replace(' ', '_').replace('-', '_')}"
-                    placeholder_mappings[placeholder_name] = concept_ids
+                    # placeholder_name = f"PLACEHOLDER_{lib_name.upper()}_{name.upper().replace(' ', '_').replace('-', '_')}"
+                    # placeholder_mappings[placeholder_name] = concept_ids
                 
                 # Process library individual codes
                 for code_info in lib_extraction.get('codes', []):

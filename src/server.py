@@ -16,6 +16,7 @@ from tools.map_vsac_to_omop import (
 from tools.lookup_loinc_code import lookup_loinc_code_tool
 from tools.lookup_snomed_code import lookup_snomed_code_tool
 from tools.parse_cql_structure import parse_cql_structure_tool
+from tools.extract_valuesets_with_omop import extract_valuesets_with_omop_tool
 from tools.generate_omop_sql import generate_omop_sql_tool
 from tools.validate_generated_sql import validate_generated_sql_tool
 from tools.correct_sql_errors import correct_sql_errors_tool
@@ -185,6 +186,26 @@ def create_omop_server() -> FastMCP:
         """Parse CQL structure and analyze dependencies using LLM."""
         return await parse_cql_structure_tool(
             cql_content, cql_file_path, config_path
+        )
+    
+    @mcp.tool()
+    async def extract_valuesets_with_omop(
+        cql_content: str,
+        library_files: Optional[Dict[str, str]] = None,
+        parsed_structure: Optional[Dict[str, Any]] = None,
+        vsac_username: Optional[str] = None,
+        vsac_password: Optional[str] = None,
+        database_user: Optional[str] = None,
+        database_endpoint: Optional[str] = None,
+        database_name: Optional[str] = None,
+        database_password: Optional[str] = None,
+        omop_database_schema: Optional[str] = None
+    ) -> dict:
+        """Extract ValueSets with OMOP mapping."""
+        return await extract_valuesets_with_omop_tool(
+            cql_content, library_files, parsed_structure,
+            vsac_username, vsac_password, database_user,
+            database_endpoint, database_name, database_password, omop_database_schema
         )
     
     @mcp.tool()

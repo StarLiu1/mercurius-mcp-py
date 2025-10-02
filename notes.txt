@@ -1,4 +1,38 @@
 to start the inspector env: mcp-inspector python start_server.py
 
 Next todo: streamable http, executable sql, output to csv
-ICL + MCP?
+
+
+Scenario 1: Local MCP Server (Claude Desktop)
+When you run an MCP server locally and connect it to Claude Desktop:
+File Creation Behavior:
+
+Files are created directly on your local filesystem
+The MCP server runs on your machine with your file system permissions
+
+
+Scenario 2: Remote MCP Server (Cloud)
+When the MCP server runs on a cloud server:
+File Creation Behavior:
+
+Files are created on the cloud server's filesystem, not your local machine
+- Option A: Return Content, Let Claude Create Artifact
+- Option B: Store on Cloud with Download URL
+
+    Option D: Hybrid Architecture (Recommended for Cloud)
+    python# Remote MCP: Does the heavy lifting (VSAC, OMOP mapping, SQL generation)
+    # Returns results as data
+
+    # Local MCP: Simple file I/O operations
+    # Takes data from remote MCP and saves locally
+
+    # User workflow:
+    # 1. Claude calls remote MCP: translate_cql_to_sql_complete()
+    # 2. Claude gets back SQL as data
+    # 3. Claude calls local MCP: save_file(content, path)
+    # 4. File saved to user's machine
+
+
+Big picture
+- institutional MCP with local data access
+- interactive shared MCP that can pull aggregate data (reinventing atlas?)
