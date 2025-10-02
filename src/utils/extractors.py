@@ -1,6 +1,6 @@
 import re
 import logging
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Any
 from models.vsac_models import ValueSetReference
 
 logger = logging.getLogger(__name__)
@@ -106,3 +106,34 @@ def map_vsac_to_omop_vocabulary(vsac_code_system_name: str) -> str:
     }
     
     return mappings.get(vsac_code_system_name, vsac_code_system_name)
+
+def extract_individual_codes_from_cql(cql_query: str) -> Dict[str, Any]:
+    """
+    Extract individual LOINC/SNOMED codes from CQL query.
+    
+    Returns:
+        Dict with codes array and count
+    """
+    codes = []
+    
+    # Pattern for code declarations like: code "8462-4": '8462-4' from "LOINC"
+    code_pattern = r'code\s+"([^"]+)":\s+\'([^\']+)\'\s+from\s+"([^"]+)"'
+    
+    matches = re.finditer(code_pattern, cql_query, re.IGNORECASE)
+    
+    for match in matches:
+        name = match.group(1)
+        code = match.group(2)
+        system = match.group(3)
+        
+        codes.append({
+            "name": name,
+            "code": code,
+            "system": system
+        })
+        logger.info(f'Found individual code: {name} ({code}) from {system}')
+    
+    return {
+        "codes": codes,
+        "count": len(codes)
+    }

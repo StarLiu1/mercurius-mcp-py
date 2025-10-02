@@ -3,7 +3,7 @@
 import logging
 from typing import Dict, Any, List, Optional
 import asyncpg
-from utils.extractors import extract_valueset_identifiers_from_cql, map_vsac_to_omop_vocabulary
+from utils.extractors import extract_valueset_identifiers_from_cql, map_vsac_to_omop_vocabulary, extract_individual_codes_from_cql
 from services.vsac_services import vsac_service
 from config.settings import settings
 from datetime import datetime
@@ -647,6 +647,11 @@ async def map_vsac_to_omop_tool(
         extraction_result = extract_valueset_identifiers_from_cql(cql_query)
         extracted_oids = extraction_result[0]  # oids
         valuesets = extraction_result[1]       # valuesets
+
+        # Also extract individual codes
+        code_extraction_result = extract_individual_codes_from_cql(cql_query)
+        individual_codes = code_extraction_result.get('codes', [])
+        logger.info(f"Found {len(individual_codes)} individual codes")
         
         if len(extracted_oids) == 0:
             return {
@@ -672,6 +677,32 @@ async def map_vsac_to_omop_tool(
         concepts_for_mapping, value_set_summary = prepare_concepts_and_summary(
             vsac_results, valuesets
         )
+
+        individual_code_mappings = []
+        for code in individual_codes:
+            clean_code = code['code'].replace('-', '_').replace('.', '_')
+            placeholder_name = f"PLACEHOLDER_{code['system'].upper()}_{clean_code}"
+            
+            concepts_for_mapping.append({
+                "concept_set_id": placeholder_name,
+                "concept_set_name": code['name'],
+                "concept_code": code['code'],
+                "vocabulary_id": map_vsac_to_omop_vocabulary(code['system']),
+                "original_vocabulary": code['system'],
+                "display_name": code['name'],
+                "code_system": code['system'],
+                "is_individual_code": True
+            })
+            
+            individual_code_mappings.append({
+                "code": code['code'],
+                "name": code['name'],
+                "system": code['system'],
+                "placeholder": placeholder_name
+            })
+
+        logger.info(f'THISSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS {individual_code_mappings}')
+        print(f'THISSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS {individual_code_mappings}')
         
         logger.info(f"Prepared {len(concepts_for_mapping)} concepts for OMOP mapping")
         
@@ -731,8 +762,9 @@ async def map_vsac_to_omop_tool(
                 "step4_final_concept_sets": {
                     "verbatim": omop_mapping_results.get("verbatim", []),
                     "standard": omop_mapping_results.get("standard", []),
-                    "mapped": omop_mapping_results.get("mapped", [])
-                }
+                    "mapped": omop_mapping_results.get("mapped", []),
+                },
+                "step5_individual_code_mappings": individual_code_mappings
             },
             "metadata": {
                 "processingTime": datetime.now().isoformat(),

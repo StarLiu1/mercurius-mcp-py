@@ -82,7 +82,8 @@ async def extract_valuesets_with_omop_tool(
         main_pipeline = main_result.get('pipeline', {})
         main_extraction = main_pipeline.get('step1_extraction', {})
         main_omop = main_pipeline.get('step3_omop_mapping', {})
-        
+        main_code_extraction = main_pipeline.get('step5_individual_code_mappings', {})
+
         # Build initial data structures
         all_valuesets = {}
         placeholder_mappings = {}
@@ -115,7 +116,7 @@ async def extract_valuesets_with_omop_tool(
             # placeholder_mappings[placeholder_name] = concept_ids
         
         # Process individual codes from main CQL
-        for code_info in main_extraction.get('codes', []):
+        for code_info in main_code_extraction:
             code = code_info.get('code', '')
             name = code_info.get('name', '')
             system = code_info.get('system', '')
@@ -170,6 +171,7 @@ async def extract_valuesets_with_omop_tool(
                 lib_pipeline = lib_result.get('pipeline', {})
                 lib_extraction = lib_pipeline.get('step1_extraction', {})
                 lib_omop = lib_pipeline.get('step3_omop_mapping', {})
+                lib_code_extraction = lib_pipeline.get('step5_individual_code_mappings', {})
                 
                 # Process library valuesets
                 for vs_info in lib_extraction.get('valuesets', []):
@@ -198,23 +200,23 @@ async def extract_valuesets_with_omop_tool(
                     
                     # placeholder_name = f"PLACEHOLDER_{lib_name.upper()}_{name.upper().replace(' ', '_').replace('-', '_')}"
                     # placeholder_mappings[placeholder_name] = concept_ids
-                
+
                 # Process library individual codes
-                for code_info in lib_extraction.get('codes', []):
+                for code_info in lib_code_extraction:
                     code = code_info.get('code', '')
                     name = code_info.get('name', '')
                     system = code_info.get('system', '')
                     
                     if code and system:
                         clean_code = code.replace('-', '_').replace('.', '_')
-                        placeholder_key = f"PLACEHOLDER_{lib_name.upper()}_{system.upper()}_{clean_code}"
+                        placeholder_key = f"PLACEHOLDER_{system.upper()}_{clean_code}"
                         
                         concept_ids = []
                         for concept in lib_omop.get('mapped', []):
                             if concept.get('concept_set_id') == placeholder_key:
                                 concept_ids.append(str(concept['concept_id']))
                         
-                        individual_codes[f"{lib_name}_{system}_{code}"] = {
+                        individual_codes[f"{system}_{code}"] = {
                             "name": name,
                             "code": code,
                             "system": system,
