@@ -39,6 +39,11 @@ from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
+from utils.config import load_config
+
+# Load config once when server starts
+CONFIG = load_config()
+
 def create_omop_server() -> FastMCP:
     """Create and configure the OMOP MCP server."""
     
@@ -180,12 +185,11 @@ def create_omop_server() -> FastMCP:
     @mcp.tool()
     async def parse_cql_structure(
         cql_content: str,
-        cql_file_path: Optional[str] = None,
-        config_path: str = "config.yaml"
+        cql_file_path: Optional[str] = None
     ) -> dict:
         """Parse CQL structure and analyze dependencies using LLM."""
         return await parse_cql_structure_tool(
-            cql_content, cql_file_path, config_path
+            cql_content, cql_file_path, CONFIG
         )
     
     @mcp.tool()
@@ -218,14 +222,13 @@ def create_omop_server() -> FastMCP:
         library_definitions: Optional[Dict[str, Any]] = None,
         valueset_registry: Optional[Dict[str, Any]] = None,
         individual_codes: Optional[Dict[str, Any]] = None,
-        sql_dialect: str = "postgresql",
-        config_path: str = "config.yaml"
+        sql_dialect: str = "postgresql"
     ) -> dict:
         """Generate OMOP SQL from parsed CQL using LLM."""
         return await generate_omop_sql_tool(
             parsed_structure, all_valuesets, cql_content, dependency_analysis,
             library_definitions, valueset_registry, individual_codes,
-            sql_dialect, config_path
+            sql_dialect, CONFIG
         )   
     
     @mcp.tool()
@@ -233,12 +236,11 @@ def create_omop_server() -> FastMCP:
         sql_query: str,
         parsed_structure: Dict[str, Any],
         all_valuesets: Optional[Dict[str, Any]] = None,
-        sql_dialect: str = "postgresql",
-        config_path: str = "config.yaml"
+        sql_dialect: str = "postgresql"
     ) -> dict:
         """Validate generated SQL semantically and syntactically using LLM."""
         return await validate_generated_sql_tool(
-            sql_query, parsed_structure, all_valuesets, sql_dialect, config_path
+            sql_query, parsed_structure, all_valuesets, sql_dialect, CONFIG
         )
     
     @mcp.tool()
@@ -246,12 +248,11 @@ def create_omop_server() -> FastMCP:
         sql_query: str,
         validation_result: Dict[str, Any],
         parsed_structure: Optional[Dict[str, Any]] = None,
-        sql_dialect: str = "postgresql",
-        config_path: str = "config.yaml"
+        sql_dialect: str = "postgresql"
     ) -> dict:
         """Correct SQL errors using LLM."""
         return await correct_sql_errors_tool(
-            sql_query, validation_result, parsed_structure, sql_dialect, config_path
+            sql_query, validation_result, parsed_structure, sql_dialect, CONFIG
         )
     
     @mcp.tool()
@@ -269,7 +270,6 @@ def create_omop_server() -> FastMCP:
         sql_dialect: str = "postgresql",
         validate: bool = True,
         correct_errors: bool = True,
-        config_path: str = "config.yaml",
         vsac_username: Optional[str] = None,
         vsac_password: Optional[str] = None,
         database_user: Optional[str] = None,
@@ -281,7 +281,7 @@ def create_omop_server() -> FastMCP:
         """Complete CQL to SQL translation pipeline."""
         return await translate_cql_to_sql_complete_tool(
         cql_content, cql_file_path, sql_dialect, validate, correct_errors,
-        config_path, vsac_username, vsac_password, database_user, 
+        CONFIG, vsac_username, vsac_password, database_user, 
         database_endpoint, database_name, database_password, omop_database_schema
         )
     

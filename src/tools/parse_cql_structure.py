@@ -14,32 +14,32 @@ from services.library_resolver import LibraryResolver
 logger = logging.getLogger(__name__)
 
 
-def load_config(config_path: str = "config.yaml") -> Dict[str, Any]:
-    """Load configuration from YAML file."""
-    try:
-        with open(config_path, 'r') as f:
-            config = yaml.safe_load(f)
+# def load_config(config_path: str = "config.yaml") -> Dict[str, Any]:
+#     """Load configuration from YAML file."""
+#     try:
+#         with open(config_path, 'r') as f:
+#             config = yaml.safe_load(f)
         
-        # Expand environment variables
-        import os
-        def expand_env_vars(obj):
-            if isinstance(obj, dict):
-                return {k: expand_env_vars(v) for k, v in obj.items()}
-            elif isinstance(obj, str) and obj.startswith('${') and obj.endswith('}'):
-                env_var = obj[2:-1]
-                return os.getenv(env_var, obj)
-            return obj
+#         # Expand environment variables
+#         import os
+#         def expand_env_vars(obj):
+#             if isinstance(obj, dict):
+#                 return {k: expand_env_vars(v) for k, v in obj.items()}
+#             elif isinstance(obj, str) and obj.startswith('${') and obj.endswith('}'):
+#                 env_var = obj[2:-1]
+#                 return os.getenv(env_var, obj)
+#             return obj
         
-        return expand_env_vars(config)
-    except Exception as e:
-        logger.error(f"Failed to load config: {e}")
-        raise
+#         return expand_env_vars(config)
+#     except Exception as e:
+#         logger.error(f"Failed to load config: {e}")
+#         raise
 
 
 async def parse_cql_structure_tool(
     cql_content: str,
     cql_file_path: Optional[str] = None,
-    config_path: str = "config.yaml"
+    config: Dict[str, Any] = None  # ← Changed from config_path
 ) -> Dict[str, Any]:
     """
     Tool 1: Parse CQL structure and analyze dependencies using LLM.
@@ -69,7 +69,9 @@ async def parse_cql_structure_tool(
         logger.info("=" * 80)
         
         # Load configuration
-        config = load_config(config_path)
+        if config is None:
+            from utils.config import load_config
+            config = load_config()
         logger.info(f"Loaded config - Provider: {config.get('model_provider')}")
         
         # Initialize CQL parser

@@ -11,26 +11,26 @@ from services.sql_generator import SimpleSQLGenerator
 logger = logging.getLogger(__name__)
 
 
-def load_config(config_path: str = "config.yaml") -> Dict[str, Any]:
-    """Load configuration from YAML file."""
-    try:
-        with open(config_path, 'r') as f:
-            config = yaml.safe_load(f)
+# def load_config(config_path: str = "config.yaml") -> Dict[str, Any]:
+#     """Load configuration from YAML file."""
+#     try:
+#         with open(config_path, 'r') as f:
+#             config = yaml.safe_load(f)
         
-        # Expand environment variables
-        import os
-        def expand_env_vars(obj):
-            if isinstance(obj, dict):
-                return {k: expand_env_vars(v) for k, v in obj.items()}
-            elif isinstance(obj, str) and obj.startswith('${') and obj.endswith('}'):
-                env_var = obj[2:-1]
-                return os.getenv(env_var, obj)
-            return obj
+#         # Expand environment variables
+#         import os
+#         def expand_env_vars(obj):
+#             if isinstance(obj, dict):
+#                 return {k: expand_env_vars(v) for k, v in obj.items()}
+#             elif isinstance(obj, str) and obj.startswith('${') and obj.endswith('}'):
+#                 env_var = obj[2:-1]
+#                 return os.getenv(env_var, obj)
+#             return obj
         
-        return expand_env_vars(config)
-    except Exception as e:
-        logger.error(f"Failed to load config: {e}")
-        raise
+#         return expand_env_vars(config)
+#     except Exception as e:
+#         logger.error(f"Failed to load config: {e}")
+#         raise
 
 
 async def generate_omop_sql_tool(
@@ -43,7 +43,7 @@ async def generate_omop_sql_tool(
     valueset_registry: Optional[Dict[str, Any]] = None,
     individual_codes: Optional[Dict[str, Any]] = None,
     sql_dialect: str = "postgresql",
-    config_path: str = "config.yaml"
+    config: Dict[str, Any] = None 
 ) -> Dict[str, Any]:
     """
     Tool 3: Generate OMOP SQL from parsed CQL structure using LLM.
@@ -81,7 +81,9 @@ async def generate_omop_sql_tool(
         logger.info("=" * 80)
         
         # Load configuration
-        config = load_config(config_path)
+        if config is None:
+            from utils.config import load_config
+            config = load_config()
         config['sql_dialect'] = sql_dialect
         
         logger.info(f"Using LLM provider: {config.get('model_provider')}")

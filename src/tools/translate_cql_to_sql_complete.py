@@ -21,7 +21,7 @@ async def translate_cql_to_sql_complete_tool(
     sql_dialect: str = "postgresql",
     validate: bool = True,
     correct_errors: bool = True,
-    config_path: str = "config.yaml",
+    config: Dict[str, Any] = None,
     vsac_username: Optional[str] = None,
     vsac_password: Optional[str] = None,
     database_user: Optional[str] = None,
@@ -47,7 +47,7 @@ async def translate_cql_to_sql_complete_tool(
         sql_dialect: Target SQL dialect (postgresql, snowflake, bigquery, sqlserver)
         validate: Whether to run validation (Tool 4)
         correct_errors: Whether to correct errors if validation fails (Tool 5)
-        config_path: Path to config.yaml
+        config: Path to config.yaml
         vsac_username: VSAC username (optional, uses env var)
         vsac_password: VSAC password (optional, uses env var)
         database_*: Database config (optional, uses env vars)
@@ -80,7 +80,7 @@ async def translate_cql_to_sql_complete_tool(
         tool1_result = await parse_cql_structure_tool(
             cql_content=cql_content,
             cql_file_path=cql_file_path,
-            config_path=config_path
+            config=config
         )
         
         pipeline_results['tool1_parse'] = tool1_result
@@ -145,7 +145,7 @@ async def translate_cql_to_sql_complete_tool(
             valueset_registry=tool2_result.get('valueset_registry'),
             individual_codes=tool2_result.get('individual_codes'),
             sql_dialect=sql_dialect,
-            config_path=config_path
+            config=config
         )
         
         pipeline_results['tool3_generate'] = tool3_result
@@ -177,7 +177,7 @@ async def translate_cql_to_sql_complete_tool(
                 parsed_structure=tool1_result['parsed_structure'],
                 all_valuesets=tool2_result['all_valuesets'],
                 sql_dialect=sql_dialect,
-                config_path=config_path
+                config=config
             )
             
             pipeline_results['tool4_validate'] = tool4_result
@@ -205,7 +205,7 @@ async def translate_cql_to_sql_complete_tool(
                 validation_result=validation_result,
                 parsed_structure=tool1_result['parsed_structure'],
                 sql_dialect=sql_dialect,
-                config_path=config_path
+                config=config
             )
             
             pipeline_results['tool5_correct'] = tool5_result

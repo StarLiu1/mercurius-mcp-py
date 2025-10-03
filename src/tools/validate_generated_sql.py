@@ -38,7 +38,7 @@ async def validate_generated_sql_tool(
     parsed_structure: Dict[str, Any],
     all_valuesets: Optional[Dict[str, Any]] = None,
     sql_dialect: str = "postgresql",
-    config_path: str = "config.yaml"
+    config: Dict[str, Any] = None 
 ) -> Dict[str, Any]:
     """
     Tool 4: Validate generated SQL semantically and syntactically using LLM.
@@ -83,7 +83,9 @@ async def validate_generated_sql_tool(
             }
         
         # Load configuration
-        config = load_config(config_path)
+        if config is None:
+            from utils.config import load_config
+            config = load_config()
         logger.info(f"Using LLM provider: {config.get('model_provider')}")
         
         # Initialize SQL validator

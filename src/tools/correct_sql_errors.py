@@ -11,26 +11,26 @@ from services.sql_corrector import SQLCorrector
 logger = logging.getLogger(__name__)
 
 
-def load_config(config_path: str = "config.yaml") -> Dict[str, Any]:
-    """Load configuration from YAML file."""
-    try:
-        with open(config_path, 'r') as f:
-            config = yaml.safe_load(f)
+# def load_config(config_path: str = "config.yaml") -> Dict[str, Any]:
+#     """Load configuration from YAML file."""
+#     try:
+#         with open(config_path, 'r') as f:
+#             config = yaml.safe_load(f)
         
-        # Expand environment variables
-        import os
-        def expand_env_vars(obj):
-            if isinstance(obj, dict):
-                return {k: expand_env_vars(v) for k, v in obj.items()}
-            elif isinstance(obj, str) and obj.startswith('${') and obj.endswith('}'):
-                env_var = obj[2:-1]
-                return os.getenv(env_var, obj)
-            return obj
+#         # Expand environment variables
+#         import os
+#         def expand_env_vars(obj):
+#             if isinstance(obj, dict):
+#                 return {k: expand_env_vars(v) for k, v in obj.items()}
+#             elif isinstance(obj, str) and obj.startswith('${') and obj.endswith('}'):
+#                 env_var = obj[2:-1]
+#                 return os.getenv(env_var, obj)
+#             return obj
         
-        return expand_env_vars(config)
-    except Exception as e:
-        logger.error(f"Failed to load config: {e}")
-        raise
+#         return expand_env_vars(config)
+#     except Exception as e:
+#         logger.error(f"Failed to load config: {e}")
+#         raise
 
 
 async def correct_sql_errors_tool(
@@ -38,7 +38,7 @@ async def correct_sql_errors_tool(
     validation_result: Dict[str, Any],
     parsed_structure: Optional[Dict[str, Any]] = None,
     sql_dialect: str = "postgresql",
-    config_path: str = "config.yaml"
+    config: Dict[str, Any] = None 
 ) -> Dict[str, Any]:
     """
     Tool 5: Correct SQL errors based on validation feedback using LLM.
@@ -100,7 +100,9 @@ async def correct_sql_errors_tool(
             logger.info(f"  - {error.get('message')}")
         
         # Load configuration
-        config = load_config(config_path)
+        if config is None:
+            from utils.config import load_config
+            config = load_config()
         logger.info(f"Using LLM provider: {config.get('model_provider')}")
         
         # Initialize SQL corrector
