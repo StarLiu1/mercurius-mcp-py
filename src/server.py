@@ -1,7 +1,7 @@
 import logging
 from typing import Optional, List, Dict, Any
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp import FastMCP, Context
 from tools.parse_nl_to_cql import (
     parse_nl_to_cql_tool,
     extract_valuesets_tool,
@@ -266,6 +266,7 @@ def create_omop_server() -> FastMCP:
     @mcp.tool()
     async def translate_cql_to_sql_complete(
         cql_content: str,
+        ctx: Context,
         cql_file_path: Optional[str] = None,
         sql_dialect: str = "postgresql",
         validate: bool = True,
@@ -280,7 +281,7 @@ def create_omop_server() -> FastMCP:
     ) -> dict:
         """Complete CQL to SQL translation pipeline."""
         return await translate_cql_to_sql_complete_tool(
-        cql_content, cql_file_path, sql_dialect, validate, correct_errors,
+        cql_content, Context, cql_file_path, sql_dialect, validate, correct_errors,
         CONFIG, vsac_username, vsac_password, database_user, 
         database_endpoint, database_name, database_password, omop_database_schema
         )
@@ -304,6 +305,40 @@ def create_omop_server() -> FastMCP:
         schema = await omop_schema_resource()
         import json
         return json.dumps(schema, indent=2)
+    
+    @mcp.prompt()
+    async def translate_cql_measure_workflow() -> str:
+        """Workflow for translating CQL measures to OMOP SQL."""
+        return """
+    # CQL to OMOP SQL Translation Workflow
+
+    To translate a CQL measure to SQL, follow these steps in order:
+
+    ## Step 1: Parse CQL Structure
+    Call: `parse_cql_structure(cql_content, cql_file_path?)`
+    Returns: parsed_structure, library_files, dependency_analysis
+
+    ## Step 2: Extract ValueSets with OMOP Mapping
+    Call: `extract_valuesets_with_omop(cql_content, library_files, parsed_structure, credentials...)`
+    Returns: all_valuesets, placeholder_mappings, valueset_registry
+
+    ## Step 3: Generate SQL
+    Call: `generate_omop_sql(parsed_structure, all_valuesets, cql_content, placeholder_mappings, ...)`
+    Returns: sql (with placeholders)
+
+    ## Step 4: Validate SQL (Optional)
+    Call: `validate_generated_sql(sql_query, parsed_structure, all_valuesets, sql_dialect)`
+    Returns: validation_result with issues
+
+    ## Step 5: Correct Errors (Optional)
+    If validation found errors:
+    Call: `correct_sql_errors(sql_query, validation_result, parsed_structure, sql_dialect)`
+    Returns: corrected_sql
+
+    ## Step 6: Finalize SQL
+    Call: `finalize_sql(sql_query, placeholder_mappings, sql_dialect)`
+    Returns: final_sql (ready to execute)
+    """
     
     logger.info("OMOP MCP server created successfully with OMOP mapping support")
     return mcp

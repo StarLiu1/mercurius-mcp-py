@@ -39,7 +39,7 @@ logger = logging.getLogger(__name__)
 async def parse_cql_structure_tool(
     cql_content: str,
     cql_file_path: Optional[str] = None,
-    config: Dict[str, Any] = None  # ← Changed from config_path
+    config: Dict[str, Any] = None 
 ) -> Dict[str, Any]:
     """
     Tool 1: Parse CQL structure and analyze dependencies using LLM.

@@ -1,9 +1,11 @@
 """
 Tool 7: Complete CQL to SQL translation - orchestrates Tools 1-6.
 """
-
+import asyncio
+from datetime import datetime
 import logging
 from typing import Dict, Any, Optional
+from mcp.server.fastmcp import Context
 
 from tools.parse_cql_structure import parse_cql_structure_tool
 from tools.extract_valuesets_with_omop import extract_valuesets_with_omop_tool
@@ -17,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 async def translate_cql_to_sql_complete_tool(
     cql_content: str,
+    ctx: Context,
     cql_file_path: Optional[str] = None,
     sql_dialect: str = "postgresql",
     validate: bool = True,
@@ -60,6 +63,22 @@ async def translate_cql_to_sql_complete_tool(
         - statistics: Comprehensive statistics
         - errors: Any errors encountered
     """
+    start_time = datetime.now()
+
+    async def send_heartbeat():
+        """Send progress every 15 seconds"""
+        while True:
+            await asyncio.sleep(15)
+            elapsed = (datetime.now() - start_time).total_seconds()
+            await ctx.report_progress(
+                progress=int(elapsed),
+                total=None,  # Unknown total is fine!
+                message=f"Still working... ({elapsed:.0f}s elapsed)"
+            )
+    
+    # Start heartbeat task
+    heartbeat_task = asyncio.create_task(send_heartbeat())
+
     try:
         logger.info("=" * 80)
         logger.info("COMPLETE CQL TO SQL TRANSLATION PIPELINE")
@@ -320,3 +339,7 @@ async def translate_cql_to_sql_complete_tool(
             "pipeline_results": pipeline_results if 'pipeline_results' in locals() else {},
             "errors": errors if 'errors' in locals() else [str(e)]
         }
+
+    finally:
+        # Stop heartbeat when done
+        heartbeat_task.cancel()

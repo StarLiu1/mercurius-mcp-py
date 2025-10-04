@@ -77,7 +77,8 @@ async def generate_omop_sql_tool(
     """
     try:
         logger.info("=" * 80)
-        logger.info(f"TOOL 3: Generating OMOP SQL for {sql_dialect}")
+        logger.info(type(sql_dialect))
+        logger.info(f"TOOL 3: Generating OMOP SQL for {sql_dialect.upper()}")
         logger.info("=" * 80)
         
         # Load configuration
