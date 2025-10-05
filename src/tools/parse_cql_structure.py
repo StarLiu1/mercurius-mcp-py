@@ -3,13 +3,14 @@ Tool 1: Parse CQL structure and analyze dependencies using LLM.
 """
 
 import logging
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Union
 from pathlib import Path
 import yaml
 
 from services.cql_parser import CQLParser
 from services.library_resolver import LibraryResolver
 # from services.mcp_client_simplified import SimplifiedMCPClient
+from utils.parameter_normalizer import normalize_dict_param, normalize_string_param, log_parameter_types
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +40,7 @@ logger = logging.getLogger(__name__)
 async def parse_cql_structure_tool(
     cql_content: str,
     cql_file_path: Optional[str] = None,
-    config: Dict[str, Any] = None 
+    config: Optional[Union[Dict[str, Any], str]] = None
 ) -> Dict[str, Any]:
     """
     Tool 1: Parse CQL structure and analyze dependencies using LLM.

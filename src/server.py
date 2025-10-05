@@ -312,7 +312,7 @@ def create_omop_server() -> FastMCP:
         return """
     # CQL to OMOP SQL Translation Workflow
 
-    To translate a CQL measure to SQL, follow these steps in order:
+    To translate a CQL measure to SQL, follow these steps in order, call the functions in sequence without manually passing the complex structures:
 
     ## Step 1: Parse CQL Structure
     Call: `parse_cql_structure(cql_content, cql_file_path?)`
@@ -322,22 +322,32 @@ def create_omop_server() -> FastMCP:
     Call: `extract_valuesets_with_omop(cql_content, library_files, parsed_structure, credentials...)`
     Returns: all_valuesets, placeholder_mappings, valueset_registry
 
+    ## Before you proceed to the next step, ask for permission.
+
     ## Step 3: Generate SQL
     Call: `generate_omop_sql(parsed_structure, all_valuesets, cql_content, placeholder_mappings, ...)`
     Returns: sql (with placeholders)
 
+    ## Before you proceed to the next step, ask for permission.
+
     ## Step 4: Validate SQL (Optional)
     Call: `validate_generated_sql(sql_query, parsed_structure, all_valuesets, sql_dialect)`
     Returns: validation_result with issues
+
+    ## Before you proceed to the next step, ask for permission.
 
     ## Step 5: Correct Errors (Optional)
     If validation found errors:
     Call: `correct_sql_errors(sql_query, validation_result, parsed_structure, sql_dialect)`
     Returns: corrected_sql
 
+    ## Before you proceed to the next step, ask for permission.
+
     ## Step 6: Finalize SQL
     Call: `finalize_sql(sql_query, placeholder_mappings, sql_dialect)`
     Returns: final_sql (ready to execute)
+
+    ## Step 7: Create an Artifact of the final SQL.
     """
     
     logger.info("OMOP MCP server created successfully with OMOP mapping support")

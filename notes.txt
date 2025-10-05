@@ -2,6 +2,9 @@ to start the inspector env: mcp-inspector python start_server.py
 
 Next todo: streamable http, executable sql, output to csv
 
+Output Schema
+https://modelcontextprotocol.io/specification/2025-06-18/server/tools#structured-content
+
 
 Scenario 1: Local MCP Server (Claude Desktop)
 When you run an MCP server locally and connect it to Claude Desktop:

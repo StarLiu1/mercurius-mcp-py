@@ -3,8 +3,9 @@ Tool 5: Correct SQL errors based on validation feedback using LLM.
 """
 
 import logging
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Union
 import yaml
+from utils.parameter_normalizer import normalize_dict_param, normalize_string_param, log_parameter_types
 
 from services.sql_corrector import SQLCorrector
 
@@ -35,8 +36,8 @@ logger = logging.getLogger(__name__)
 
 async def correct_sql_errors_tool(
     sql_query: str,
-    validation_result: Dict[str, Any],
-    parsed_structure: Optional[Dict[str, Any]] = None,
+    validation_result: Union[Dict[str, Any], str],
+    parsed_structure: Optional[Union[Dict[str, Any], str]] = None,
     sql_dialect: str = "postgresql",
     config: Dict[str, Any] = None 
 ) -> Dict[str, Any]:
@@ -66,6 +67,11 @@ async def correct_sql_errors_tool(
         - original_sql: Original SQL for reference
     """
     try:
+
+        parsed_structure = normalize_dict_param(parsed_structure, "parsed_structure", required=True)
+        sql_dialect = normalize_string_param(sql_dialect, "sql_dialect", default="postgresql")
+        sql_dialect = sql_dialect.lower().strip()
+
         logger.info("=" * 80)
         logger.info(f"TOOL 5: Correcting SQL Errors for {sql_dialect.upper()}")
         logger.info("=" * 80)

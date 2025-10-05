@@ -3,8 +3,9 @@ Tool 4: Validate generated SQL semantically and syntactically using LLM.
 """
 
 import logging
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Union
 import yaml
+from utils.parameter_normalizer import normalize_dict_param, normalize_string_param, log_parameter_types
 
 from services.sql_validator import SQLValidator
 
@@ -35,10 +36,10 @@ def load_config(config_path: str = "config.yaml") -> Dict[str, Any]:
 
 async def validate_generated_sql_tool(
     sql_query: str,
-    parsed_structure: Dict[str, Any],
-    all_valuesets: Optional[Dict[str, Any]] = None,
+    parsed_structure: Union[Dict[str, Any], str],
+    all_valuesets: Optional[Union[Dict[str, Any], str]] = None,
     sql_dialect: str = "postgresql",
-    config: Dict[str, Any] = None 
+    config: Union[Dict[str, Any], str] = None
 ) -> Dict[str, Any]:
     """
     Tool 4: Validate generated SQL semantically and syntactically using LLM.
@@ -66,6 +67,12 @@ async def validate_generated_sql_tool(
         - dialect: Target dialect validated against
     """
     try:
+
+        parsed_structure = normalize_dict_param(parsed_structure, "parsed_structure", required=True)
+        all_valuesets = normalize_dict_param(all_valuesets, "all_valuesets", required=True)
+        sql_dialect = normalize_string_param(sql_dialect, "sql_dialect", default="postgresql")
+        sql_dialect = sql_dialect.lower().strip()
+        
         logger.info("=" * 80)
         logger.info(f"TOOL 4: Validating SQL for {sql_dialect.upper()}")
         logger.info("=" * 80)

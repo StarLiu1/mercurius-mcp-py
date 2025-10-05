@@ -3,7 +3,8 @@ Tool 2: Extract valuesets from CQL and map to OMOP using existing MCP tool.
 """
 
 import logging
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Union
+from utils.parameter_normalizer import normalize_dict_param, normalize_string_param, log_parameter_types
 
 # Import the existing tool directly
 from tools.map_vsac_to_omop import map_vsac_to_omop_tool
@@ -13,9 +14,9 @@ logger = logging.getLogger(__name__)
 
 async def extract_valuesets_with_omop_tool(
     cql_content: str,
-    library_files: Optional[Dict[str, str]] = None,
-    parsed_structure: Optional[Dict[str, Any]] = None,
-    library_definitions: Optional[Dict[str, Any]] = None,
+    library_files: Optional[Union[Dict[str, Any], str]] = None,
+    parsed_structure: Optional[Union[Dict[str, Any], str]] = None,
+    library_definitions: Optional[Union[Dict[str, Any], str]] = None,
     vsac_username: Optional[str] = None,
     vsac_password: Optional[str] = None,
     database_user: Optional[str] = None,
@@ -52,6 +53,10 @@ async def extract_valuesets_with_omop_tool(
         logger.info("=" * 80)
         logger.info("TOOL 2: Extracting Valuesets via map-vsac-to-omop")
         logger.info("=" * 80)
+
+        library_files = normalize_dict_param(library_files, "library_files")
+        parsed_structure = normalize_dict_param(parsed_structure, "parsed_structure")
+        library_definitions = normalize_dict_param(library_definitions, "library_definitions")
         
         # Extract main CQL valuesets using existing tool
         logger.info("Calling map-vsac-to-omop for main CQL...")

@@ -4,7 +4,8 @@ Tool 6: Replace placeholders with OMOP concept IDs (final step).
 
 import logging
 import re
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Union
+from utils.parameter_normalizer import normalize_dict_param, normalize_string_param, log_parameter_types
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +41,7 @@ def flatten_concept_ids(concept_ids: List) -> List[str]:
 
 async def finalize_sql_tool(
     sql_query: str,
-    placeholder_mappings: Dict[str, List[str]],
+    placeholder_mappings: Union[Dict[str, Any], str],
     sql_dialect: str = "postgresql"
 ) -> Dict[str, Any]:
     """
@@ -70,6 +71,11 @@ async def finalize_sql_tool(
         - statistics: Replacement statistics
     """
     try:
+
+        placeholder_mappings = normalize_dict_param(placeholder_mappings, "placeholder_mappings", required=True)
+        sql_dialect = normalize_string_param(sql_dialect, "sql_dialect", default="postgresql")
+        sql_dialect = sql_dialect.lower().strip()
+
         logger.info("=" * 80)
         logger.info("TOOL 6: Replacing Placeholders (Programmatic)")
         logger.info("=" * 80)
